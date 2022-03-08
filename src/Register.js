@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { faCheck, faTimes, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import axios from './api/axios';
 
 // USER_REGEX는 반드시 소문자 혹은 대문자로 시작해야하고 4-23자
 const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
@@ -64,8 +65,29 @@ const Register = () => {
       setErrMsg("Invalid Entry");
       return;
     }
-    console.log(user, pwd);
-    setSuccess(true);
+    try{
+      const response = await axios.post(REGISTER_URL, JSON.stringify({user, pwd}),
+        {
+          headers: { 'Content-Type' : 'application/json'},
+          withCredentials: true
+        }
+      );
+      console.log(response.data);
+      console.log(response.accessToken);
+      console.log(JSON.stringify(response));
+      setSuccess(true);
+      // input 필드를 비우기
+    }catch(err){
+      if(!err?.response){
+        setErrMsg('No Server Response');
+        // 409일 경우는 이미 유저명을 누군가 사용중일 때
+      }else if(err.response?.status === 409){
+        setErrMsg('Someone is using the user name');
+      }else{
+        setErrMsg('Registration failed');
+      }
+      errRef.current.focus();
+    }
   }
 
 
